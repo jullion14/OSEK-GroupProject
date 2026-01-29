@@ -1,2 +1,5 @@
 /erika/
 /out/
+.DS_Store 
+*.o 
+.settings/
