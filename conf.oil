@@ -91,6 +91,7 @@ CPU mySystem {
     APP_SRC  = "code.cpp";			/* startup OSEE */
     APP_SRC  = "task.cpp";			/* task file */
     APP_SRC  = "debug.cpp";			/* debug file */
+    APP_SRC  = "LiquidCrystal.cpp";
   };
 
   TASK DetectTask {

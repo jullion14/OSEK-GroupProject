@@ -115,7 +115,15 @@ void setup(void)
 
 	/* initialize the digital pins using arduino functions */
 
+	pinMode(LED_East, OUTPUT);
+	digitalWrite(LED_East, LOW);
 
+	pinMode(LED_West, OUTPUT);
+	digitalWrite(LED_West, LOW);
+
+	pinMode(Servo_East, OUTPUT);
+
+	pinMode(Servo_West, OUTPUT);
 
 
 
