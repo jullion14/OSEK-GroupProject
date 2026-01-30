@@ -170,7 +170,7 @@ CPU mySystem {
   /* -------- LCD task (lower priority) -------- */
   TASK DisplayTask {
     PRIORITY = 1;
-    SCHEDULE = FULL;     /* FULL is fine; NON also works if you never call Schedule() */
+    SCHEDULE = FULL;     
     AUTOSTART = FALSE;
     STACK = SHARED;
     ACTIVATION = 1;
@@ -188,7 +188,7 @@ CPU mySystem {
     SECONDSPERTICK = 0.001;
   };
 
-  /* Run LDR sampling every 200 ms (example) */
+  /* Run LDR sampling every 200 ms */
   ALARM AlarmDetectLight {
     COUNTER = SystemTimer;
     ACTION = ACTIVATETASK {

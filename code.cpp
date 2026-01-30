@@ -94,7 +94,7 @@
 
 /* Arduino SDK. */
 #include "Arduino.h"
-#include "LiquidCrystal.h"						// LCD - Add header
+#include "LiquidCrystal.h"
 #include "ServoTimer2.h"
 
 /* Local Headers */
@@ -108,7 +108,7 @@ extern "C" {
 /* External Functions */
 extern void serial_print(char const * msg);
 
-extern class LiquidCrystal lcd;  	// LCD - Add Class object
+extern class LiquidCrystal lcd;
 extern ServoTimer2 servoWest;
 extern ServoTimer2 servoEast;
 

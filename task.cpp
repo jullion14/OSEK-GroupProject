@@ -228,10 +228,10 @@
 
 extern "C" {
 
-/* LCD object defined once here */
+/* LCD object definition*/
 LiquidCrystal lcd(RS, EN, D4, D5, D6, D7);
 
-/* Task declarations must match conf.oil names */
+/* Task declarations */
 DeclareTask(DetectLightTask);
 DeclareTask(DisplayTask);
 
@@ -291,7 +291,6 @@ static float adcToLux(int raw)
 {
   float resistorVoltage = (float)raw / MAX_ADC_READING * ADC_REF_VOLTAGE;
 
-  // Avoid divide-by-zero if sensor saturates
   if (resistorVoltage < 0.001f) resistorVoltage = 0.001f;
   if (resistorVoltage > (ADC_REF_VOLTAGE - 0.001f)) resistorVoltage = ADC_REF_VOLTAGE - 0.001f;
 
@@ -333,7 +332,7 @@ TASK(DisplayTask)
 
   char line[32];
 
-  // L1: LUX: xxxW xxxA xxxE  (you only have W/E now, so we’ll show A as average)
+  // L1: LUX: xxxW xxxA xxxE
   float luxAvg = (luxWest + luxEast) * 0.5f;
 
   snprintf(line, sizeof(line), "LUX:%3dW %3dA %3dE",
