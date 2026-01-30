@@ -1,11 +1,130 @@
+//CPU mySystem {
+//
+//  OS myOs {
+//    EE_OPT = "OS_EE_APPL_BUILD_DEBUG";
+//    EE_OPT = "OS_EE_BUILD_DEBUG";
+//
+//    STARTUPHOOK = TRUE;
+//    USERESSCHEDULER = TRUE;
+//
+//    CPU_DATA = AVR8 {
+//      MULTI_STACK = TRUE;
+//      IDLEHOOK = TRUE {
+//        HOOKNAME = "idle_hook";
+//      };
+//    };
+//
+//    MCU_DATA = MEGA {
+//      MODEL = MEGA_328p;
+//    };
+//
+//    LIB = ARDUINO {
+//      SDK_BOARD = UNO;
+//      VARIANT = CC {
+//        VERSION = "1.8.15";
+//      };
+//      STAND_ALONE = TRUE;
+//    };
+//
+//    KERNEL_TYPE = OSEK {
+//      CLASS = BCC1;
+//    };
+//  };
+//
+//  APPDATA myApp {
+//    APP_SRC  = "code.cpp";
+//    APP_SRC  = "task.cpp";
+//    APP_SRC  = "debug.cpp";
+//    APP_SRC  = "ServoTimer2.cpp";
+//    APP_SRC  = "LiquidCrystal.cpp";
+//  };
+//
+//  /* ===== Shared resource (Priority Ceiling Protocol via OSEK resource) ===== */
+//  RESOURCE SharedRes {
+//    RESOURCEPROPERTY = STANDARD;
+//  };
+//
+//  /* ===== System counter (1ms tick) ===== */
+//  COUNTER SystemTimer {
+//    MINCYCLE = 1;
+//    MAXALLOWEDVALUE = 65535;
+//    TICKSPERBASE = 1;
+//    TYPE = HARDWARE {
+//      SYSTEM_TIMER = TRUE;
+//      PRIORITY = 1;
+//      DEVICE = "TIMER_COMPA";
+//    };
+//    SECONDSPERTICK = 0.001;
+//  };
+//
+//  /* ===== Tasks ===== */
+//  TASK DetectTask {
+//    PRIORITY = 1;
+//    SCHEDULE = FULL;
+//    AUTOSTART = FALSE;
+//    STACK = SHARED;
+//    ACTIVATION = 1;
+//    RESOURCE = SharedRes;
+//  };
+//
+//  TASK DisplayTask {
+//    PRIORITY = 2;
+//    SCHEDULE = FULL;
+//    AUTOSTART = FALSE;
+//    STACK = SHARED;
+//    ACTIVATION = 1;
+//    RESOURCE = SharedRes;
+//  };
+//
+//  TASK ButtonTask {
+//    PRIORITY = 3;
+//    SCHEDULE = FULL;
+//    AUTOSTART = FALSE;
+//    STACK = SHARED;
+//    ACTIVATION = 1;
+//    RESOURCE = SharedRes;
+//  };
+//
+//  /* ===== Alarms (activate periodic tasks) ===== */
+//  ALARM AlarmDetect {
+//    COUNTER = SystemTimer;
+//    ACTION = ACTIVATETASK { TASK = DetectTask; };
+//    AUTOSTART = TRUE {
+//      ALARMTIME = 50;     /* first at 50ms */
+//      CYCLETIME = 200;    /* every 200ms */
+//    };
+//  };
+//
+//  ALARM AlarmDisplay {
+//    COUNTER = SystemTimer;
+//    ACTION = ACTIVATETASK { TASK = DisplayTask; };
+//    AUTOSTART = TRUE {
+//      ALARMTIME = 100;    /* first at 100ms */
+//      CYCLETIME = 500;    /* every 500ms */
+//    };
+//  };
+//
+//  /* ===== Button ISR (Pin-change interrupt on PORTD) ===== */
+//  ISR ButtonISR {
+//    CATEGORY = 2;
+//    SOURCE = "PORTD";
+//    PRIORITY = 2;
+//  };
+//
+//};
+
+
+
+
+//JX Edits 
+
 CPU mySystem {
 
   OS myOs {
     EE_OPT = "OS_EE_APPL_BUILD_DEBUG";
     EE_OPT = "OS_EE_BUILD_DEBUG";
 
-    STARTUPHOOK = TRUE;
-    USERESSCHEDULER = TRUE;
+    USERESSCHEDULER = FALSE;
 
     CPU_DATA = AVR8 {
       MULTI_STACK = TRUE;
@@ -35,80 +154,61 @@ CPU mySystem {
     APP_SRC  = "code.cpp";
     APP_SRC  = "task.cpp";
     APP_SRC  = "debug.cpp";
-    APP_SRC  = "ServoTimer2.cpp";
     APP_SRC  = "LiquidCrystal.cpp";
+    APP_SRC  = "ServoTimer2.cpp";
   };
 
-  /* ===== Shared resource (Priority Ceiling Protocol via OSEK resource) ===== */
-  RESOURCE SharedRes {
-    RESOURCEPROPERTY = STANDARD;
+  /* -------- LDR task (higher priority) -------- */
+  TASK DetectLightTask {
+    PRIORITY = 2;
+    SCHEDULE = FULL;
+    AUTOSTART = FALSE;
+    STACK = SHARED;
+    ACTIVATION = 1;
   };
 
-  /* ===== System counter (1ms tick) ===== */
+  /* -------- LCD task (lower priority) -------- */
+  TASK DisplayTask {
+    PRIORITY = 1;
+    SCHEDULE = FULL;     /* FULL is fine; NON also works if you never call Schedule() */
+    AUTOSTART = FALSE;
+    STACK = SHARED;
+    ACTIVATION = 1;
+  };
+
   COUNTER SystemTimer {
     MINCYCLE = 1;
     MAXALLOWEDVALUE = 65535;
     TICKSPERBASE = 1;
     TYPE = HARDWARE {
       SYSTEM_TIMER = TRUE;
-      PRIORITY = 1;
-      DEVICE = "TIMER_COMPA";
+      PRIORITY     = 1;
+      DEVICE       = "TIMER1_COMPA";
     };
     SECONDSPERTICK = 0.001;
   };
 
-  /* ===== Tasks ===== */
-  TASK DetectTask {
-    PRIORITY = 1;
-    SCHEDULE = FULL;
-    AUTOSTART = FALSE;
-    STACK = SHARED;
-    ACTIVATION = 1;
-    RESOURCE = SharedRes;
-  };
-
-  TASK DisplayTask {
-    PRIORITY = 2;
-    SCHEDULE = FULL;
-    AUTOSTART = FALSE;
-    STACK = SHARED;
-    ACTIVATION = 1;
-    RESOURCE = SharedRes;
-  };
-
-  TASK ButtonTask {
-    PRIORITY = 3;
-    SCHEDULE = FULL;
-    AUTOSTART = FALSE;
-    STACK = SHARED;
-    ACTIVATION = 1;
-    RESOURCE = SharedRes;
-  };
-
-  /* ===== Alarms (activate periodic tasks) ===== */
-  ALARM AlarmDetect {
+  /* Run LDR sampling every 200 ms (example) */
+  ALARM AlarmDetectLight {
     COUNTER = SystemTimer;
-    ACTION = ACTIVATETASK { TASK = DetectTask; };
+    ACTION = ACTIVATETASK {
+      TASK = DetectLightTask;
+    };
     AUTOSTART = TRUE {
-      ALARMTIME = 50;     /* first at 50ms */
-      CYCLETIME = 200;    /* every 200ms */
+      ALARMTIME = 0;
+      CYCLETIME = 200;
     };
   };
 
+  /* Run LCD refresh every 500 ms */
   ALARM AlarmDisplay {
     COUNTER = SystemTimer;
-    ACTION = ACTIVATETASK { TASK = DisplayTask; };
+    ACTION = ACTIVATETASK {
+      TASK = DisplayTask;
+    };
     AUTOSTART = TRUE {
-      ALARMTIME = 100;    /* first at 100ms */
-      CYCLETIME = 500;    /* every 500ms */
+      ALARMTIME = 0;
+      CYCLETIME = 500;
     };
   };
-
-  /* ===== Button ISR (Pin-change interrupt on PORTD) ===== */
-  ISR ButtonISR {
-    CATEGORY = 2;
-    SOURCE = "PORTD";
-    PRIORITY = 2;
-  };
-
 };
