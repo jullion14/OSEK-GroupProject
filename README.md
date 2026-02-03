@@ -32,7 +32,7 @@ $$Lux = (889985.88) \times R_{LDR}^{-1.16552}$$
 *  **Shade Contracted:** 0 degrees PWM signal.
 *  **Shade Expanded:** 180 degrees PWM signal.
 
-## 🚀 How to Run the Simulation
+## How to Run the Simulation
 1.   **Environment:** Ensure the Erika Enterprise OSEK environment is correctly set up in your Linux VM.
 2.   **Configuration:** Define system tasks and priorities in the `conf.oil` file.
 3.   **Build:** Use Eclipse to compile the source code and generate the `.hex` binary.
@@ -42,3 +42,4 @@ $$Lux = (889985.88) \times R_{LDR}^{-1.16552}$$
 
 ---
  **Team Project: CEG2009 - Operating System and Automotive OS** **Submission Date:** 29-Mar-2026 
+
