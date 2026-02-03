@@ -39,7 +39,9 @@ $$Lux = (889985.88) \times R_{LDR}^{-1.16552}$$
 4.   **Simulation:** * Open the `*.simu` file in **SimulIDE**.
     *  Load the generated `.hex` file onto the virtual Arduino Uno.
     *  Interact with the LDR sensors to observe the shade and light transitions.
+Note: Ensure the properties for the LCD is set to 20 x 4.
 
 ---
  **Team Project: CEG2009 - Operating System and Automotive OS** **Submission Date:** 29-Mar-2026 
+
 
