@@ -88,6 +88,10 @@ void setup(void)
 	servoWest.write(Servo_West_0);
 	servoEast.write(Servo_East_0);
 
+	//Timing Btn
+	pinMode(BTN_PLUS, INPUT_PULLUP);
+	pinMode(BTN_MINUS, INPUT_PULLUP);
+
 }
 
 int main(void)

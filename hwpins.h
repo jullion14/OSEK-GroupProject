@@ -34,4 +34,8 @@
 #define Servo_East_90   (1500)
 #define Servo_East_180	(2250)
 
+/* ===== Time Buttons ===== */
+#define BTN_PLUS		(A2)
+#define BTN_MINUS		(A3)
+
 #endif /* HWPINS_H_ */

@@ -80,19 +80,100 @@ static float adcToLux(int raw)
   return (float)(LUX_CALC_SCALAR * pow(ldrResistance, LUX_CALC_EXPONENT));
 }
 
+/* Returns true if time is within 18:30:00 .. next day 07:30:00 */
+static bool isStreetlightClockWindow(uint8_t h, uint8_t m, uint8_t s)
+{
+  (void)s; // seconds not needed for the window logic
+
+  const uint16_t start = 18u * 60u + 30u; // 18:30
+  const uint16_t end   =  7u * 60u + 30u; // 07:30
+  const uint16_t cur   = (uint16_t)h * 60u + (uint16_t)m;
+
+  // Window crosses midnight: ON if cur >= start OR cur < end
+  return (cur >= start) || (cur < end);
+}
+
+static void adjustTimeByMinutes(int deltaMin)
+{
+  // Make a local copy first (atomic-ish)
+  uint8_t h = hh, m = mm, s = ss;
+
+  int total = (int)h * 60 + (int)m;
+  total += deltaMin;
+
+  // wrap around 0..1439
+  while (total < 0) total += 1440;
+  while (total >= 1440) total -= 1440;
+
+  // write back
+  hh = (uint8_t)(total / 60);
+  mm = (uint8_t)(total % 60);
+  ss = s; // keep seconds unchanged
+}
+
+// Simple debounced "press event" detector for INPUT_PULLUP buttons
+static bool buttonPressedEvent(uint8_t pin)
+{
+  // Debounce state per pin (supports two pins)
+  typedef struct {
+    uint8_t lastStable;
+    uint8_t lastRead;
+    uint32_t lastChangeMs;
+  } BtnState;
+
+  static BtnState stPlus  = { HIGH, HIGH, 0 };
+  static BtnState stMinus = { HIGH, HIGH, 0 };
+
+  BtnState *st = (pin == BTN_PLUS) ? &stPlus : &stMinus;
+
+  uint8_t r = (uint8_t)digitalRead(pin);
+
+  // track changes for debounce
+  if (r != st->lastRead) {
+    st->lastRead = r;
+    st->lastChangeMs = millis();
+  }
+
+  // if stable for 40ms, accept as new stable
+  if ((millis() - st->lastChangeMs) >= 40) {
+    if (st->lastStable != st->lastRead) {
+      st->lastStable = st->lastRead;
+
+      // We only fire on the transition to PRESSED (LOW)
+      if (st->lastStable == LOW) return true;
+    }
+  }
+
+  return false;
+}
+
 /* ----------------- Task 1: Read LDRs + control LEDs ----------------- */
 TASK(DetectLightTask)
 {
   int rawW = analogRead(LDR_West);
   int rawE = analogRead(LDR_East);
 
+  if (buttonPressedEvent(BTN_PLUS)) {
+	  adjustTimeByMinutes(+30);
+	  Serial.println("Plus pressed");
+  }
+  if (buttonPressedEvent(BTN_MINUS)) {
+	  adjustTimeByMinutes(-30);
+	  Serial.println("Minus pressed");
+  }
+
   luxWest = adcToLux(rawW);
   luxEast = adcToLux(rawE);
 
   float luxAvg = (luxWest + luxEast) * 0.5f;
 
-  //LIGHT status + LEDs
-  lightOn = (luxAvg < NIGHT_THRESHOLD);
+  // -------- LIGHT status + LEDs (Clock override) --------
+  const bool forceOnByClock = isStreetlightClockWindow(hh, mm, ss);
+
+  // Average LUX <= 200 => Switch On, >200 => Switch Off
+  const bool onByLux = (luxAvg <= NIGHT_THRESHOLD);
+
+  lightOn = forceOnByClock || onByLux;
 
   digitalWrite(LED_West, lightOn ? HIGH : LOW);
   digitalWrite(LED_East, lightOn ? HIGH : LOW);
@@ -102,6 +183,8 @@ TASK(DetectLightTask)
 
   servoWest.write(shadeOn ? Servo_West_180 : Servo_West_0);
   servoEast.write(shadeOn ? Servo_East_180 : Servo_East_0);
+
+  TerminateTask();
 
 }
 
@@ -114,6 +197,8 @@ TASK(DisplayTask)
 
   // L1: LUX: xxxW xxxA xxxE
   float luxAvg = (luxWest + luxEast) * 0.5f;
+
+  // --- Button handling: +/- 30 minutes on press ---
 
   snprintf(line, sizeof(line), "LUX:%3dW %3dA %3dE",
            (int)luxWest, (int)luxAvg, (int)luxEast);
