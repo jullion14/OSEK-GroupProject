@@ -38,10 +38,15 @@ CPU mySystem {
     APP_SRC  = "ServoTimer2.cpp";
   };
 
+  RESOURCE SharedData {
+    RESOURCEPROPERTY = STANDARD;
+  };
+
   /* -------- LDR task (higher priority) -------- */
   TASK DetectLightTask {
     PRIORITY = 2;
     SCHEDULE = FULL;
+    RESOURCE = SharedData;
     AUTOSTART = FALSE;
     STACK = SHARED;
     ACTIVATION = 1;
@@ -50,7 +55,8 @@ CPU mySystem {
   /* -------- LCD task (lower priority) -------- */
   TASK DisplayTask {
     PRIORITY = 1;
-    SCHEDULE = FULL;     
+    SCHEDULE = FULL;
+    RESOURCE = SharedData;
     AUTOSTART = FALSE;
     STACK = SHARED;
     ACTIVATION = 1;
