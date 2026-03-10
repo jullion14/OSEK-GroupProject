@@ -37,7 +37,7 @@ volatile float luxEast = 0.0f;
 volatile bool shadeOn = false;  // placeholder
 volatile bool lightOn = false;  // we’ll link this to LEDs below
 
-volatile uint8_t hh = 12, mm = 0, ss = 0;
+volatile uint8_t hh = 18, mm = 0, ss = 0;
 
 /* ----------------- Helpers ----------------- */
 static void lcdPrintPadded(uint8_t col, uint8_t row, const char *s)
