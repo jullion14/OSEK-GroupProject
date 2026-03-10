@@ -153,6 +153,9 @@ TASK(DetectLightTask)
   int rawW = analogRead(LDR_West);
   int rawE = analogRead(LDR_East);
 
+  // Protect shared clock and lux variables during updates
+  GetResource(SharedData);
+
   if (buttonPressedEvent(BTN_PLUS)) {
 	  adjustTimeByMinutes(+30);
 	  Serial.println("Plus pressed");
@@ -184,6 +187,7 @@ TASK(DetectLightTask)
   servoWest.write(shadeOn ? Servo_West_180 : Servo_West_0);
   servoEast.write(shadeOn ? Servo_East_180 : Servo_East_0);
 
+  ReleaseResource(SharedData);
   TerminateTask();
 
 }
@@ -191,6 +195,8 @@ TASK(DetectLightTask)
 /* ----------------- Task 2: Update LCD UI ----------------- */
 TASK(DisplayTask)
 {
+  // Protect variables while reading them for the UI
+  GetResource(SharedData);
   tickClock_500ms();
 
   char line[32];
@@ -216,6 +222,7 @@ TASK(DisplayTask)
   snprintf(line, sizeof(line), "Clock: %02u:%02u:%02u", hh, mm, ss);
   lcdPrintPadded(0, 3, line);
 
+  ReleaseResource(SharedData);
   TerminateTask();
 }
 
