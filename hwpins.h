@@ -2,10 +2,14 @@
  *  \brief	This is the header to define the pins and macros.
  */
 
+
+// Done By Chia Jun Xuan, 2400893
+
+
 #ifndef HWPINS_H_
 #define HWPINS_H_
 
-/* ===== SimulIDE wiring (Project.simu) ===== */
+/* ===== SimulIDE wiring based on .simu ===== */
 #define LED_West        (2)
 #define LED_East        (3)
 
