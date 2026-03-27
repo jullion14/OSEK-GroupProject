@@ -1,3 +1,7 @@
+/* File: conf.oil */
+/* Contributors: Jonas, Kaiser */
+/* Jonas configured system timer and alarms */
+/* Kaiser verified task priorities and timing */
 CPU mySystem {
 
   OS myOs {
@@ -38,11 +42,17 @@ CPU mySystem {
     APP_SRC  = "ServoTimer2.cpp";
   };
 
+/* Resource: SharedData */
+/* Author: Kaiser */
+/* Protects shared variables accessed by both tasks */
   RESOURCE SharedData {
     RESOURCEPROPERTY = STANDARD;
   };
 
   /* -------- LDR task (higher priority) -------- */
+  /* Task configuration: DetectLightTask */
+  /* Authors: Jonas, Kaiser */
+  /* Jonas configured task scheduling, Kaiser verified priority */
   TASK DetectLightTask {
     PRIORITY = 2;
     SCHEDULE = FULL;
@@ -53,6 +63,9 @@ CPU mySystem {
   };
 
   /* -------- LCD task (lower priority) -------- */
+  /* Task configuration: DisplayTask */
+  /* Authors: Jonas, Kaiser */
+  /* Jonas configured task scheduling, Kaiser verified priority */
   TASK DisplayTask {
     PRIORITY = 1;
     SCHEDULE = FULL;
@@ -62,6 +75,9 @@ CPU mySystem {
     ACTIVATION = 1;
   };
 
+/* Counter: SystemTimer */
+/* Author: Jonas */
+/* Hardware timer used for periodic task activation */
   COUNTER SystemTimer {
     MINCYCLE = 1;
     MAXALLOWEDVALUE = 65535;
@@ -75,6 +91,9 @@ CPU mySystem {
   };
 
   /* Run LDR sampling every 200 ms */
+  /* Alarm: AlarmDetectLight */
+  /* Author: Jonas */
+  /* Activates DetectLightTask every 200 ms */
   ALARM AlarmDetectLight {
     COUNTER = SystemTimer;
     ACTION = ACTIVATETASK {
@@ -87,6 +106,9 @@ CPU mySystem {
   };
 
   /* Run LCD refresh every 500 ms */
+  /* Alarm: AlarmDisplay */
+  /* Author: Jonas */
+  /* Activates DisplayTask every 500 ms */
   ALARM AlarmDisplay {
     COUNTER = SystemTimer;
     ACTION = ACTIVATETASK {
