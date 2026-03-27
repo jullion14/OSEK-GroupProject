@@ -1,3 +1,7 @@
+// File: code.cpp
+// Contributors: Chia Jun Xuan, Team
+// Chia Jun Xuan supported hardware setup based on circuit design
+// Team handled final integration
 /* ERIKA Enterprise. */
 #include "ee.h"
 
@@ -38,7 +42,9 @@ OsEE_addr volatile main_sp;
     }                                                               \
   } while ( 0 )
 
-
+// Function: idle_hook
+// Author: Team
+// OSEK idle hook for background processing
 void idle_hook(void)
 {
   OsEE_addr volatile curr_sp = osEE_get_SP();
@@ -56,6 +62,9 @@ void idle_hook(void)
   sei();
 }
 
+// Function: setup
+// Authors: Chia Jun Xuan, Team
+// Initializes LCD, sensors, LEDs, servos, and buttons
 void setup(void)
 {
 	// set up the LCD's number of columns and rows:
@@ -94,6 +103,9 @@ void setup(void)
 
 }
 
+// Function: main
+// Author: Team
+// Initializes system and starts OSEK OS
 int main(void)
 {
 
