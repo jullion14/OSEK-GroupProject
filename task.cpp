@@ -1,3 +1,11 @@
+// File: task.cpp
+// Contributors:
+// - Julian: DisplayTask, LCD formatting functions
+// - Joseph: DetectLightTask, LDR reading, lux conversion,
+//           threshold logic, button debounce
+// - Kaiser: SharedData handling, GetResource/ReleaseResource,
+//           shared variable coordination
+
 #include "ee.h"
 #include "Arduino.h"
 #include "LiquidCrystal.h"
@@ -29,17 +37,22 @@ ServoTimer2 servoEast;
 #define LUX_CALC_EXPONENT   (-1.16552f)
 #define SERVO_LUX_THRESHOLD (500.0f)
 
-
+// Shared variables used by both tasks
+// Joseph updates values, Julian displays them
+// Kaiser ensures safe access using SharedData
 /* ----------------- LCD Global Variables----------------- */
 volatile float luxWest = 0.0f;
 volatile float luxEast = 0.0f;
 
-volatile bool shadeOn = false;  // placeholder
-volatile bool lightOn = false;  // we’ll link this to LEDs below
+volatile bool shadeOn = false;
+volatile bool lightOn = false;
 
 volatile uint8_t hh = 18, mm = 0, ss = 0;
 
 /* ----------------- Helpers ----------------- */
+// Function: lcdPrintPadded
+// Author: Julian
+// Prints text to LCD and fills remaining space
 static void lcdPrintPadded(uint8_t col, uint8_t row, const char *s)
 {
   lcd.setCursor(col, row);
@@ -54,7 +67,9 @@ static void lcdPrintPadded(uint8_t col, uint8_t row, const char *s)
     i++;
   }
 }
-
+// Function: tickClock_500ms
+// Author: Julian
+// Updates software clock every 500 ms cycle
 static void tickClock_500ms(void)
 {
   static uint8_t half = 0;
@@ -67,6 +82,9 @@ static void tickClock_500ms(void)
   }
 }
 
+// Function: adcToLux
+// Author: Joseph
+// Converts ADC reading to lux value
 static float adcToLux(int raw)
 {
   float resistorVoltage = (float)raw / MAX_ADC_READING * ADC_REF_VOLTAGE;
@@ -80,7 +98,9 @@ static float adcToLux(int raw)
   return (float)(LUX_CALC_SCALAR * pow(ldrResistance, LUX_CALC_EXPONENT));
 }
 
-/* Returns true if time is within 18:30:00 .. next day 07:30:00 */
+// Function: isStreetlightClockWindow
+// Author: Joseph
+// Checks if current time is within night lighting window
 static bool isStreetlightClockWindow(uint8_t h, uint8_t m, uint8_t s)
 {
   (void)s; // seconds not needed for the window logic
@@ -93,6 +113,9 @@ static bool isStreetlightClockWindow(uint8_t h, uint8_t m, uint8_t s)
   return (cur >= start) || (cur < end);
 }
 
+// Function: adjustTimeByMinutes
+// Author: Joseph
+// Adjusts system clock by +/- minutes
 static void adjustTimeByMinutes(int deltaMin)
 {
   // Make a local copy first (atomic-ish)
@@ -111,7 +134,9 @@ static void adjustTimeByMinutes(int deltaMin)
   ss = s; // keep seconds unchanged
 }
 
-// Simple debounced "press event" detector for INPUT_PULLUP buttons
+// Function: buttonPressedEvent
+// Author: Joseph
+// Detects button press with debounce
 static bool buttonPressedEvent(uint8_t pin)
 {
   // Debounce state per pin (supports two pins)
@@ -148,12 +173,15 @@ static bool buttonPressedEvent(uint8_t pin)
 }
 
 /* ----------------- Task 1: Read LDRs + control LEDs ----------------- */
+// Task: DetectLightTask
+// Authors: Joseph, Kaiser
+// Reads LDR, calculates lux, controls LED and servo (200 ms)
 TASK(DetectLightTask)
 {
   int rawW = analogRead(LDR_West);
   int rawE = analogRead(LDR_East);
 
-  // Protect shared clock and lux variables during updates
+  // Kaiser: protect shared variables
   GetResource(SharedData);
 
   if (buttonPressedEvent(BTN_PLUS)) {
@@ -186,16 +214,20 @@ TASK(DetectLightTask)
 
   servoWest.write(shadeOn ? Servo_West_180 : Servo_West_0);
   servoEast.write(shadeOn ? Servo_East_180 : Servo_East_0);
-
+	
+  // Kaiser: release shared variables
   ReleaseResource(SharedData);
   TerminateTask();
 
 }
 
 /* ----------------- Task 2: Update LCD UI ----------------- */
+// Task: DisplayTask
+// Authors: Julian, Kaiser
+// Updates LCD with system status (500 ms)
 TASK(DisplayTask)
 {
-  // Protect variables while reading them for the UI
+  // Kaiser: protect shared data for display
   GetResource(SharedData);
   tickClock_500ms();
 
@@ -222,6 +254,7 @@ TASK(DisplayTask)
   snprintf(line, sizeof(line), "Clock: %02u:%02u:%02u", hh, mm, ss);
   lcdPrintPadded(0, 3, line);
 
+  // Kaiser: release shared data
   ReleaseResource(SharedData);
   TerminateTask();
 }
